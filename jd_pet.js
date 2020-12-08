@@ -436,7 +436,7 @@ async function showMsg() {
   }
 }
 function readShareCode() {
-  return new Promise(async resolve => {
+  return new Promise(resolve => {
     $.get({url: `http://api.turinglabs.net/api/v1/jd/pet/read/${randomCount}/`}, (err, resp, data) => {
       try {
         if (err) {
@@ -454,8 +454,6 @@ function readShareCode() {
         resolve(data);
       }
     })
-    await $.wait(10000);
-    resolve()
   })
 }
 function shareCodesFormat() {
