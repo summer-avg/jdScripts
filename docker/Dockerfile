@@ -1,23 +1,28 @@
 FROM alpine
-MAINTAINER Akira <e.akimoto.akira@gmail.com>
+LABEL AUTHOR="none" \
+        VERSION=0.1.3
+
+ENV DEFAULT_LIST_FILE=crontab_list.sh \
+        CUSTOM_LIST_MERGE_TYPE=append \
+        REPO_URL=https://gitee.com/lxk0301/jd_scripts.git
 
 RUN set -ex \
         && apk update && apk upgrade\
-        && apk add --no-cache tzdata moreutils git nodejs npm\
+        && apk add --no-cache tzdata  git  nodejs  moreutils  npm curl jq \
         && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
         && echo "Asia/Shanghai" > /etc/timezone
 
-RUN git clone https://github.com/lxk0301/jd_scripts /scripts \
+RUN git clone ${REPO_URL} /scripts \
         && cd /scripts \
+        && git checkout master \
         && mkdir logs \
-        && npm install \
-        && cd /tmp \
-        && npm install request
+        && npm install
 
-ENV CRONTAB_LIST_FILE crontab_list_ts.sh
-
-RUN crontab /scripts/docker/crontab_list_ts.sh
+RUN cp /scripts/docker/docker_entrypoint.sh /usr/local/bin \
+        && chmod +x /usr/local/bin/docker_entrypoint.sh
 
 WORKDIR /scripts
 
-CMD ["node"]
+ENTRYPOINT ["docker_entrypoint.sh"]
+
+CMD [ "crond" ]
