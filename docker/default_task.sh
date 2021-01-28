@@ -4,19 +4,27 @@ set -e
 echo "定义定时任务合并处理用到的文件路径..."
 defaultListFile="/scripts/docker/$DEFAULT_LIST_FILE"
 echo "默认文件定时任务文件路径为 ${defaultListFile}"
-if [ $CUSTOM_LIST_FILE ]; then
-    customListFile="/scripts/docker/$CUSTOM_LIST_FILE"
-    echo "自定义定时任务文件路径为 ${customListFile}"
-fi
 mergedListFile="/scripts/docker/merged_list_file.sh"
 echo "合并后定时任务文件路径为 ${mergedListFile}"
 
-echo "第3步将默认定时任务列表添加到并后定时任务文件..."
+echo "第1步将默认定时任务列表添加到并后定时任务文件..."
 cat $defaultListFile >$mergedListFile
 
 echo "第2步判断是否存在自定义任务任务列表并追加..."
 if [ $CUSTOM_LIST_FILE ]; then
     echo "您配置了自定义任务文件：$CUSTOM_LIST_FILE，自定义任务类型为：$CUSTOM_LIST_MERGE_TYPE..."
+    # 无论远程还是本地挂载, 均复制到 $customListFile
+    customListFile="/scripts/docker/custom_list_file.sh"
+    echo "自定义定时任务文件临时工作路径为 ${customListFile}"
+    if expr "$CUSTOM_LIST_FILE" : 'http.*' &>/dev/null; then
+        echo "自定义任务文件为远程脚本，开始下载自定义远程任务。"
+        wget -O $customListFile $CUSTOM_LIST_FILE
+        echo "下载完成..."
+    elif [ -f /scripts/docker/$CUSTOM_LIST_FILE ]; then
+        echo "自定义任务文件为本地挂载。"
+        cp /scripts/docker/$CUSTOM_LIST_FILE $customListFile
+    fi
+
     if [ -f "$customListFile" ]; then
         if [ $CUSTOM_LIST_MERGE_TYPE == "append" ]; then
             echo "合并默认定时任务文件：$DEFAULT_LIST_FILE 和 自定义定时任务文件：$CUSTOM_LIST_FILE"
@@ -35,18 +43,19 @@ else
     echo "当前只使用了默认定时任务文件 $DEFAULT_LIST_FILE ..."
 fi
 
+##可能存在旧版crontab里面有default_task.sh任务有就直接删除，否则可能会任务重复
+sed -i "/default_task.sh/d" $mergedListFile
+
 echo "第3步判断是否配置了默认脚本更新任务..."
-if [ $(grep -c "default_task.sh" $mergedListFile) -eq '0' ]; then
+if [ $(grep -c "docker_entrypoint.sh" $mergedListFile) -eq '0' ]; then
     echo "合并后的定时任务文件，未包含必须的默认定时任务，增加默认定时任务..."
     echo -e >>$mergedListFile
     echo "52 */1 * * * docker_entrypoint.sh >> /scripts/logs/default_task.log 2>&1" >>$mergedListFile
 else
-    sed -i "/default_task.sh/d" $mergedListFile
-    echo "#脚本追加默认定时任务" >>$mergedListFile
-    echo "52 */1 * * * docker_entrypoint.sh >> /scripts/logs/default_task.log 2>&1" >>$mergedListFile
+    echo "已配置默认脚本更新任务。"
 fi
 
-echo "第5步判断是否配置了随即延迟参数..."
+echo "第4步判断是否配置了随即延迟参数..."
 if [ $RANDOM_DELAY_MAX ]; then
     if [ $RANDOM_DELAY_MAX -ge 1 ]; then
         echo "已设置随机延迟为 $RANDOM_DELAY_MAX , 设置延迟任务中..."
@@ -56,12 +65,12 @@ else
     echo "未配置随即延迟对应的环境变量，故不设置延迟任务..."
 fi
 
-echo "第6步判断是否配置自定义shell执行脚本..."
+echo "第5步判断是否配置自定义shell执行脚本..."
 if [ 0"$CUSTOM_SHELL_FILE" = "0" ]; then
     echo "未配置自定shell脚本文件，跳过执行。"
 else
     if expr "$CUSTOM_SHELL_FILE" : 'http.*' &>/dev/null; then
-        echo "自定义shell脚本为远程脚本，开始下在自定义远程脚本。"
+        echo "自定义shell脚本为远程脚本，开始下载自定义远程脚本。"
         wget -O /scripts/docker/shell_script_mod.sh $CUSTOM_SHELL_FILE
         echo "下载完成，开始执行..."
         echo "#远程自定义shell脚本追加定时任务" >>$mergedListFile
@@ -78,6 +87,20 @@ else
         fi
     fi
 fi
+
+
+
+echo "第6步删除不运行的脚本任务..."
+if [ $DO_NOT_RUN_SCRIPTS ]; then
+    echo "您配置了不运行的脚本：$DO_NOT_RUN_SCRIPTS"
+    arr=${DO_NOT_RUN_SCRIPTS//&/ }
+    for item in $arr; do
+        sed -ie '/'"${item}"'/d' ${mergedListFile}
+    done
+
+fi
+
+
 
 echo "第7步增加 |ts 任务日志输出时间戳..."
 sed -i "/\( ts\| |ts\|| ts\)/!s/>>/\|ts >>/g" $mergedListFile
