@@ -6,7 +6,7 @@ name: jd_nian
 on:
   workflow_dispatch:
   schedule:
-    - cron: '33 0 * * *'
+    - cron: '33 11 * * *'
   watch:
     types: started
   repository_dispatch:
@@ -35,7 +35,7 @@ jobs:
         run: |
           cd ~/jd_scripts
           npm install
-      - name: '运行 【京东年兽】'
+      - name: '运行 【手机年终奖】'
         run: |
           cd ~/jd_scripts
           node jd_festival.js
