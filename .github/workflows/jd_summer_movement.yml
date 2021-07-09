@@ -6,7 +6,7 @@ name: jd_summer_movement
 on:
   workflow_dispatch:
   schedule:
-    - cron: ' 25 17,22-15/2 * * *'
+    - cron: '25 17,22-15/2 * * *'
   watch:
     types: started
 
