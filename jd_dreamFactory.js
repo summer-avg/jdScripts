@@ -139,10 +139,10 @@ async function jdDreamFactory() {
     await QueryHireReward();//收取招工电力
     await PickUp();//收取自家的地下零件
     await stealFriend();
-    if (tuanActiveId) {
+    /*if (tuanActiveId) {
       await tuanActivity();
       await QueryAllTuan();
-    }
+    }*/
     await exchangeProNotify();
     await showMsg();
   } catch (e) {
