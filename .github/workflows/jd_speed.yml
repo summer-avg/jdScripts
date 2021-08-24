@@ -1,12 +1,12 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: jd_speed
+name: jd_ljd
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '33 */3 * * *'
+    - cron: '0 17 * * *'
   watch:
     types: started
 
@@ -26,7 +26,7 @@ jobs:
           npm install
       - name: '运行 【天天加速】'
         run: |
-          node jd_speed.js
+          node jd_ljd.js
         env:
           JD_COOKIE: ${{ secrets.JD_COOKIE }}
           JD_DEBUG: ${{ secrets.JD_DEBUG }}
