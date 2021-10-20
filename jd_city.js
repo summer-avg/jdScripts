@@ -292,7 +292,7 @@ function shareCodesFormat() {
 //       console.log('非首个个帐号,优先向前助力')
 //       $.newShareCodes = [...new Set([...self_code,...author_codes, ...pool])]
 //     }
-    $.newShareCodes = [...new Set([...self_code])]
+    $.newShareCodes = ['Qt2twOqlQw-ifILWW5gzmqP8-1Qj53TYU3LtHPalTbM','RtGKzu2mEAiketHMQtMzhTx6XMH7uEL9NKkxvbqK0bixeLnyXg','S8C0lrD9CFuid4qYW5h_1qlqAbgcM11g0eWUen0cDh-l','W9G-i5HfF3v7Odn7UYh_mqVTJFX10n7sgNwps0-9fsx35oQ']
     // const readShareCodeRes = await readShareCode();
     // if (readShareCodeRes && readShareCodeRes.code === 200) {
     //   $.newShareCodes = [...new Set([...$.newShareCodes, ...(readShareCodeRes.data || [])])];
